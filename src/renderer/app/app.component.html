@@ -1,2 +1,18 @@
-<h1>Hello from Angular + Electron</h1>
-<p>App version: {{ version() }}</p>
+@if (showLoading()) {
+  <div class="unity-overlay loading">
+    <div class="spinner"></div>
+    <p>Loading Unity scene...</p>
+    <p class="hint">First launch may take up to 30s while HDRP compiles shaders.</p>
+  </div>
+}
+
+@if (showError()) {
+  <div class="unity-overlay error">
+    <h2>Unity could not start</h2>
+    <p class="msg">{{ unity.status().error }}</p>
+    @if (unity.status().logPath) {
+      <p class="log-path"><strong>Log:</strong> {{ unity.status().logPath }}</p>
+    }
+    <button type="button" (click)="restartUnity()">Restart Unity</button>
+  </div>
+}

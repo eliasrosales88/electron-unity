@@ -15,6 +15,11 @@ import { preloadConfig } from './webpack.preload.config';
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
+    extraResource: [
+      './resources-staging/unity',
+      './node_modules/koffi',
+      './node_modules/@koromix',
+    ],
   },
   rebuildConfig: {},
   makers: [

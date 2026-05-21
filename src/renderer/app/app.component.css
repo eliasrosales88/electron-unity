@@ -1,8 +1,65 @@
 :host {
   display: block;
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+  overflow: hidden;
+  color: #e6e6e6;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-h1 {
-  color: #2e86de;
+.unity-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.85);
+  pointer-events: auto;
+  z-index: 10;
+  padding: 24px;
+  text-align: center;
+}
+
+.unity-overlay p { margin: 0; }
+
+.unity-overlay.loading .spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #1a1a1a;
+  border-top-color: #4e9bff;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+.unity-overlay.loading .hint {
+  font-size: 13px;
+  color: #888;
+}
+
+.unity-overlay.error {
+  background: rgba(40, 10, 10, 0.95);
+}
+
+.unity-overlay.error h2 { color: #ff7878; margin: 0 0 8px; }
+.unity-overlay.error .msg { max-width: 70ch; }
+.unity-overlay.error .log-path { font-size: 12px; color: #aaa; word-break: break-all; }
+
+.unity-overlay button {
+  margin-top: 8px;
+  padding: 8px 20px;
+  background: #4e9bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.unity-overlay button:hover { background: #6cb0ff; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }

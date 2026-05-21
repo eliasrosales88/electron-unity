@@ -90,3 +90,6 @@ typings/
 
 # Electron-Forge
 out/
+
+# Staged Unity build artifact (produced by scripts/stage-unity.mjs)
+resources-staging/
