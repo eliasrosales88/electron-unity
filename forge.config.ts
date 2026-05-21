@@ -32,13 +32,23 @@ const config: ForgeConfig = {
     new AutoUnpackNativesPlugin({}),
     new WebpackPlugin({
       mainConfig,
+      devContentSecurityPolicy: "default-src 'self' 'unsafe-inline' data:; script-src 'self' 'unsafe-eval' 'unsafe-inline' data:; connect-src 'self' ws://127.0.0.1:* ws://localhost:* http://localhost:*",
       renderer: {
         config: rendererConfig,
         entryPoints: [
           {
+            html: './src/renderer/shell.html',
+            js: './src/renderer/shell.ts',
+            name: 'main_window',
+            preload: {
+              js: './src/preload/index.ts',
+              config: preloadConfig,
+            },
+          },
+          {
             html: './src/renderer/index.html',
             js: './src/renderer/main.ts',
-            name: 'main_window',
+            name: 'overlay_window',
             preload: {
               js: './src/preload/index.ts',
               config: preloadConfig,

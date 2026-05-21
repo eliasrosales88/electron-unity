@@ -16,3 +16,7 @@
     <button type="button" (click)="restartUnity()">Restart Unity</button>
   </div>
 }
+
+@if (unity.ready()) {
+  <app-ws-inspector></app-ws-inspector>
+}

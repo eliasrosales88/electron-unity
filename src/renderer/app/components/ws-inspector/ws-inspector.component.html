@@ -1,0 +1,44 @@
+<section
+  class="ws-inspector"
+  [ngClass]="{ collapsed: collapsed() }"
+>
+  <header class="ws-inspector__header">
+    <div class="ws-inspector__title">
+      <span class="dot" [ngClass]="'state-' + wsState()"></span>
+      <span>Unity &rarr; Electron</span>
+      <span class="badge">{{ count() }}</span>
+      @if (wsPort()) {
+        <span class="port">:{{ wsPort() }}</span>
+      }
+      <span class="state-label">{{ wsState() }}</span>
+    </div>
+    <div class="ws-inspector__actions">
+      <button type="button" (click)="togglePretty()" [title]="prettyPrint() ? 'Mostrar JSON sin formatear' : 'Pretty print JSON'">
+        {{ prettyPrint() ? 'raw' : 'pretty' }}
+      </button>
+      <button type="button" (click)="clear()" title="Vaciar buffer">clear</button>
+      <button type="button" (click)="toggleCollapsed()" [title]="collapsed() ? 'Expandir' : 'Colapsar'">
+        {{ collapsed() ? '▾' : '▴' }}
+      </button>
+    </div>
+  </header>
+
+  @if (!collapsed()) {
+    <div class="ws-inspector__body">
+      @if (count() === 0) {
+        <p class="empty">Esperando mensajes del WebSocket…</p>
+      } @else {
+        @for (msg of messages(); track msg.id) {
+          <article class="ws-msg">
+            <div class="ws-msg__meta">
+              <span class="ws-msg__id">#{{ msg.id }}</span>
+              <span class="ws-msg__time">{{ msg.receivedAt | date:'HH:mm:ss.SSS' }}</span>
+              <span class="ws-msg__size">{{ msg.raw.length }} B</span>
+            </div>
+            <pre class="ws-msg__payload">{{ format(msg) }}</pre>
+          </article>
+        }
+      }
+    </div>
+  }
+</section>

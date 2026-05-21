@@ -3,7 +3,12 @@ export const IpcChannels = {
   UnityStatus: 'unity:status',
   UnityGetStatus: 'unity:get-status',
   UnityRestart: 'unity:restart',
+  OverlaySetBounds: 'overlay:set-bounds',
 } as const;
+
+export type OverlayBoundsRequest =
+  | { mode: 'modal' }
+  | { mode: 'compact'; width: number; height: number; marginX?: number; marginY?: number };
 
 export interface UnityBuildMetadata {
   executable: string;
@@ -28,5 +33,8 @@ export interface ElectronAPI {
     getStatus(): Promise<UnityStatus>;
     onStatus(cb: (status: UnityStatus) => void): () => void;
     restart(): Promise<void>;
+  };
+  overlay: {
+    setBounds(req: OverlayBoundsRequest): void;
   };
 }

@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { IpcChannels, type ElectronAPI, type UnityStatus } from '../shared/ipc-contract';
+import { IpcChannels, type ElectronAPI, type UnityStatus, type OverlayBoundsRequest } from '../shared/ipc-contract';
 
 const api: ElectronAPI = {
   getAppVersion: () => ipcRenderer.invoke(IpcChannels.AppVersion),
@@ -11,6 +11,11 @@ const api: ElectronAPI = {
       return () => { ipcRenderer.removeListener(IpcChannels.UnityStatus, listener); };
     },
     restart: () => ipcRenderer.invoke(IpcChannels.UnityRestart),
+  },
+  overlay: {
+    setBounds: (req: OverlayBoundsRequest) => {
+      ipcRenderer.send(IpcChannels.OverlaySetBounds, req);
+    },
   },
 };
 

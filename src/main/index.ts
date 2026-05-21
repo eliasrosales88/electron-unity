@@ -1,10 +1,15 @@
 import { app, BrowserWindow } from 'electron';
 import { registerAppInfoHandlers } from './ipc/app-info';
 import { registerUnityHandlers } from './ipc/unity';
+import { registerOverlayHandlers } from './ipc/overlay';
 import { unityLifecycle } from './unity/lifecycle';
+import { createOverlayWindow } from './overlay/window';
+import { linkOverlayToMain, OverlayLink } from './overlay/lifecycle';
 
 declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
 declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
+declare const OVERLAY_WINDOW_WEBPACK_ENTRY: string;
+declare const OVERLAY_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
 if (require('electron-squirrel-startup')) {
   app.quit();
@@ -16,7 +21,10 @@ if (!gotSingleInstanceLock) {
 }
 
 let mainWindow: BrowserWindow | null = null;
+let overlayWindow: BrowserWindow | null = null;
+let overlayLink: OverlayLink | null = null;
 let unsubscribeUnityIpc: (() => void) | null = null;
+let unsubscribeOverlayIpc: (() => void) | null = null;
 
 const createWindow = (): void => {
   mainWindow = new BrowserWindow({
@@ -34,15 +42,26 @@ const createWindow = (): void => {
 
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
-  if (!app.isPackaged) {
-    mainWindow.webContents.openDevTools({ mode: 'detach' });
-  }
-
   unityLifecycle.attachWindow(mainWindow);
-  unsubscribeUnityIpc = registerUnityHandlers(mainWindow);
 
   mainWindow.once('ready-to-show', () => {
-    mainWindow?.show();
+    if (!mainWindow) return;
+    mainWindow.show();
+
+    overlayWindow = createOverlayWindow({
+      parent: mainWindow,
+      url: OVERLAY_WINDOW_WEBPACK_ENTRY,
+      preload: OVERLAY_WINDOW_PRELOAD_WEBPACK_ENTRY,
+    });
+
+    overlayLink = linkOverlayToMain(mainWindow, overlayWindow);
+    unsubscribeUnityIpc = registerUnityHandlers(overlayWindow);
+    unsubscribeOverlayIpc = registerOverlayHandlers(overlayLink);
+
+    if (!app.isPackaged) {
+      overlayWindow.webContents.openDevTools({ mode: 'detach' });
+    }
+
     unityLifecycle.start().catch((err) => {
       console.error('[main] Unity start failed:', err);
     });
@@ -52,6 +71,11 @@ const createWindow = (): void => {
     mainWindow = null;
     unsubscribeUnityIpc?.();
     unsubscribeUnityIpc = null;
+    unsubscribeOverlayIpc?.();
+    unsubscribeOverlayIpc = null;
+    overlayLink?.dispose();
+    overlayLink = null;
+    overlayWindow = null;
   });
 };
 
