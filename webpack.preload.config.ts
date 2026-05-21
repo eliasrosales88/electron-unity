@@ -1,10 +1,8 @@
 import type { Configuration } from 'webpack';
-
 import { rules } from './webpack.rules';
 import { plugins } from './webpack.plugins';
 
-export const mainConfig: Configuration = {
-  entry: './src/main/index.ts',
+export const preloadConfig: Configuration = {
   module: {
     rules: [
       ...rules,
@@ -23,6 +21,6 @@ export const mainConfig: Configuration = {
   },
   plugins,
   resolve: {
-    extensions: ['.js', '.ts', '.jsx', '.tsx', '.css', '.json'],
+    extensions: ['.js', '.ts', '.json'],
   },
 };
