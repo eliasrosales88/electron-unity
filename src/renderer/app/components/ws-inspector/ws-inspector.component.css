@@ -1,0 +1,174 @@
+:host {
+  display: block;
+  width: 420px;
+  box-sizing: content-box;
+  padding: 10px;
+}
+
+.ws-inspector {
+  display: flex;
+  flex-direction: column;
+  background: rgba(0, 0, 0, 0.7);
+  color: #e6e6e6;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  font-family: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+  font-size: 12px;
+  backdrop-filter: blur(4px);
+}
+
+.ws-inspector__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  user-select: none;
+}
+
+.ws-inspector__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.ws-inspector__title .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #555;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.ws-inspector__title .dot.state-connecting {
+  background: #facc15;
+  box-shadow: 0 0 6px #facc15;
+  animation: pulse 1s linear infinite;
+}
+
+.ws-inspector__title .dot.state-open {
+  background: #4ade80;
+  box-shadow: 0 0 6px #4ade80;
+}
+
+.ws-inspector__title .dot.state-closed,
+.ws-inspector__title .dot.state-error {
+  background: #f87171;
+  box-shadow: 0 0 6px #f87171;
+}
+
+.ws-inspector__title .port {
+  color: #888;
+  font-size: 10px;
+}
+
+.ws-inspector__title .state-label {
+  color: #888;
+  font-size: 10px;
+  font-weight: 400;
+  text-transform: lowercase;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.ws-inspector__title .badge {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.ws-inspector__actions {
+  display: flex;
+  gap: 4px;
+}
+
+.ws-inspector__actions button {
+  background: rgba(255, 255, 255, 0.06);
+  color: #cfcfcf;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.ws-inspector__actions button:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.ws-inspector__body {
+  max-height: 480px;
+  overflow-y: auto;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ws-inspector__body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.ws-inspector__body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+
+.empty {
+  color: #888;
+  text-align: center;
+  margin: 16px 0;
+  font-style: italic;
+}
+
+.ws-msg {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  padding: 6px 8px;
+}
+
+.ws-msg__meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 10px;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.ws-msg__id {
+  color: #4e9bff;
+  font-weight: 600;
+}
+
+.ws-msg__time {
+  color: #b0b0b0;
+}
+
+.ws-msg__size {
+  margin-left: auto;
+  color: #666;
+}
+
+.ws-msg__payload {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #d4d4d4;
+  font-size: 11.5px;
+  line-height: 1.4;
+  max-height: 240px;
+  overflow-y: auto;
+}
