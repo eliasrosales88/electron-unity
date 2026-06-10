@@ -1,0 +1,39 @@
+<aside class="side-panel" [class.side-panel--collapsed]="collapsed()">
+  @if (!collapsed()) {
+    <header class="side-panel__header">
+      <div class="side-panel__brand">
+        <span class="dot" [ngClass]="'state-' + wsState()"></span>
+        <h1>Control de escena</h1>
+      </div>
+      <button
+        mat-icon-button
+        type="button"
+        class="side-panel__toggle"
+        (click)="toggle()"
+        title="Plegar panel"
+        aria-label="Plegar panel"
+      >
+        <span class="glyph">&lsaquo;</span>
+      </button>
+    </header>
+
+    <mat-divider></mat-divider>
+
+    <div class="side-panel__content">
+      <app-scene-controls></app-scene-controls>
+      <mat-divider></mat-divider>
+      <app-ws-inspector class="side-panel__inspector"></app-ws-inspector>
+    </div>
+  } @else {
+    <button
+      mat-icon-button
+      type="button"
+      class="side-panel__toggle side-panel__toggle--expand"
+      (click)="toggle()"
+      title="Desplegar panel"
+      aria-label="Desplegar panel"
+    >
+      <span class="glyph">&rsaquo;</span>
+    </button>
+  }
+</aside>

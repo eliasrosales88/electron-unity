@@ -37,14 +37,22 @@ export async function attachUnityToWindow(
   return { unityHwnd, parentHwnd };
 }
 
-export function resizeUnityToWindow(window: BrowserWindow, unityHwnd: bigint): void {
+export function resizeUnityToWindow(
+  window: BrowserWindow,
+  unityHwnd: bigint,
+  leftInsetDip = 0
+): void {
   if (!isStillWindow(unityHwnd)) return;
   const bounds = window.getContentBounds();
   const display = screen.getDisplayMatching(bounds);
   const sf = display.scaleFactor || 1;
-  const width = Math.max(1, Math.round(bounds.width * sf));
+  // Reserve a strip on the left for the docked side panel (DIP -> physical px)
+  // so the Unity child HWND and the overlay never overlap.
+  const inset = Math.min(Math.max(0, Math.round(leftInsetDip)), Math.max(0, bounds.width - 1));
+  const x = Math.round(inset * sf);
+  const width = Math.max(1, Math.round((bounds.width - inset) * sf));
   const height = Math.max(1, Math.round(bounds.height * sf));
-  moveUnityWindow(unityHwnd, 0, 0, width, height);
+  moveUnityWindow(unityHwnd, x, 0, width, height);
   focusUnity(unityHwnd);
 }
 
