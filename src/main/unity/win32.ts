@@ -21,6 +21,7 @@ const kernel32 = koffi.load('kernel32.dll');
 
 koffi.alias('HWND', 'void *');
 const EnumProc = koffi.proto('int __stdcall EnumWindowsProc(void *hwnd, intptr_t lParam)');
+koffi.struct('POINT', { x: 'long', y: 'long' });
 
 const SetParent = user32.func('void * __stdcall SetParent(void *hWndChild, void *hWndNewParent)');
 const MoveWindow = user32.func('int __stdcall MoveWindow(void *hWnd, int X, int Y, int nWidth, int nHeight, int bRepaint)');
@@ -37,6 +38,7 @@ const GetClassNameW = user32.func('int __stdcall GetClassNameW(void *hWnd, _Out_
 const GetWindowThreadProcessId = user32.func('uint32 __stdcall GetWindowThreadProcessId(void *hWnd, _Out_ uint32 *lpdwProcessId)');
 const EnumChildWindows = user32.func('int __stdcall EnumChildWindows(void *hWndParent, EnumWindowsProc *lpEnumFunc, intptr_t lParam)');
 const EnumWindowsFn = user32.func('int __stdcall EnumWindows(EnumWindowsProc *lpEnumFunc, intptr_t lParam)');
+const ClientToScreen = user32.func('int __stdcall ClientToScreen(void *hWnd, _Inout_ POINT *lpPoint)');
 
 const GWL_STYLE = -16;
 const WS_CHILD = 0x40000000 >>> 0;
@@ -143,6 +145,18 @@ export function reparentAndStyleFixup(unityHwnd: bigint, parentHwnd: bigint): vo
   const next = cleared | BigInt(WS_CHILD) | BigInt(WS_VISIBLE);
   SetWindowLongPtrW(unityHwnd as any, GWL_STYLE, next);
   SetWindowPos(unityHwnd as any, HWND_TOP as any, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+}
+
+/**
+ * Screen position (physical px) of the top-left corner of `hwnd`'s Win32 client
+ * area. On Windows the application menu bar is drawn *inside* that client area,
+ * so this origin sits above Electron's content bounds by exactly the menu
+ * height — the offset callers need to avoid painting over the menu.
+ */
+export function getClientOriginScreen(hwnd: bigint): { x: number; y: number } {
+  const pt = { x: 0, y: 0 };
+  ClientToScreen(hwnd as any, pt);
+  return { x: pt.x, y: pt.y };
 }
 
 export function moveUnityWindow(unityHwnd: bigint, x: number, y: number, w: number, h: number): void {

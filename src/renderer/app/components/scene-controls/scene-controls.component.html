@@ -10,8 +10,9 @@
     <mat-slider class="axis__slider" [min]="-180" [max]="180" [step]="1" [displayWith]="formatLabel" [disabled]="disabled()" discrete>
       <input
         matSliderThumb
+        #yawThumb="matSliderThumb"
         [value]="yaw()"
-        (valueChange)="onValueChange('yaw', $event)"
+        (input)="onValueChange('yaw', yawThumb.value)"
         (dragStart)="onDragStart()"
         (dragEnd)="onDragEnd()"
       />
@@ -26,8 +27,9 @@
     <mat-slider class="axis__slider" [min]="-85" [max]="85" [step]="1" [displayWith]="formatLabel" [disabled]="disabled()" discrete>
       <input
         matSliderThumb
+        #pitchThumb="matSliderThumb"
         [value]="pitch()"
-        (valueChange)="onValueChange('pitch', $event)"
+        (input)="onValueChange('pitch', pitchThumb.value)"
         (dragStart)="onDragStart()"
         (dragEnd)="onDragEnd()"
       />
@@ -42,8 +44,9 @@
     <mat-slider class="axis__slider" [min]="-180" [max]="180" [step]="1" [displayWith]="formatLabel" [disabled]="disabled()" discrete>
       <input
         matSliderThumb
+        #rollThumb="matSliderThumb"
         [value]="roll()"
-        (valueChange)="onValueChange('roll', $event)"
+        (input)="onValueChange('roll', rollThumb.value)"
         (dragStart)="onDragStart()"
         (dragEnd)="onDragEnd()"
       />

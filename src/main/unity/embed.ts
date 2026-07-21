@@ -8,6 +8,8 @@ import {
   postCloseToUnity,
   isStillWindow,
   focusUnity,
+  getClientOriginScreen,
+  hwndFromBuffer,
 } from './win32';
 
 export interface EmbedHandles {
@@ -49,10 +51,22 @@ export function resizeUnityToWindow(
   // Reserve a strip on the left for the docked side panel (DIP -> physical px)
   // so the Unity child HWND and the overlay never overlap.
   const inset = Math.min(Math.max(0, Math.round(leftInsetDip)), Math.max(0, bounds.width - 1));
-  const x = Math.round(inset * sf);
-  const width = Math.max(1, Math.round((bounds.width - inset) * sf));
-  const height = Math.max(1, Math.round(bounds.height * sf));
-  moveUnityWindow(unityHwnd, x, 0, width, height);
+  const insetPx = Math.round(inset * sf);
+
+  // SetWindowPos places a child relative to the parent's Win32 client area,
+  // which on Windows *includes* the application menu bar — while Electron's
+  // content bounds exclude it. Anchoring at y=0 therefore painted Unity over
+  // the menu. Measure the gap between the two origins and offset by it.
+  const contentPx = screen.dipToScreenRect(window, bounds);
+  const clientOrigin = getClientOriginScreen(hwndFromBuffer(window.getNativeWindowHandle()));
+  const offsetX = contentPx.x - clientOrigin.x;
+  const offsetY = contentPx.y - clientOrigin.y;
+
+  const x = offsetX + insetPx;
+  const y = offsetY;
+  const width = Math.max(1, contentPx.width - insetPx);
+  const height = Math.max(1, contentPx.height);
+  moveUnityWindow(unityHwnd, x, y, width, height);
   focusUnity(unityHwnd);
 }
 
