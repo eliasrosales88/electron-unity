@@ -13,11 +13,11 @@
       <span class="state-label">{{ wsState() }}</span>
     </div>
     <div class="ws-inspector__actions">
-      <button type="button" (click)="togglePretty()" [title]="prettyPrint() ? 'Mostrar JSON sin formatear' : 'Pretty print JSON'">
+      <button type="button" (click)="togglePretty()" [title]="prettyPrint() ? 'Show raw JSON' : 'Pretty print JSON'">
         {{ prettyPrint() ? 'raw' : 'pretty' }}
       </button>
-      <button type="button" (click)="clear()" title="Vaciar buffer">clear</button>
-      <button type="button" (click)="toggleCollapsed()" [title]="collapsed() ? 'Expandir' : 'Colapsar'">
+      <button type="button" (click)="clear()" title="Clear buffer">clear</button>
+      <button type="button" (click)="toggleCollapsed()" [title]="collapsed() ? 'Expand' : 'Collapse'">
         {{ collapsed() ? '▾' : '▴' }}
       </button>
     </div>
@@ -26,7 +26,7 @@
   @if (!collapsed()) {
     <div class="ws-inspector__body">
       @if (count() === 0) {
-        <p class="empty">Esperando mensajes del WebSocket…</p>
+        <p class="empty">Waiting for WebSocket messages…</p>
       } @else {
         @for (msg of messages(); track msg.id) {
           <article class="ws-msg">

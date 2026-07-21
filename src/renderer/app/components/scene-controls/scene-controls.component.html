@@ -1,10 +1,10 @@
 <section class="scene-controls">
-  <h2 class="scene-controls__title">Escena</h2>
-  <p class="scene-controls__subtitle">Rotación del panel</p>
+  <h2 class="scene-controls__title">Scene</h2>
+  <p class="scene-controls__subtitle">Panel rotation</p>
 
   <div class="axis">
     <div class="axis__label">
-      <span>Yaw <small>(eje Y)</small></span>
+      <span>Yaw <small>(Y axis)</small></span>
       <span class="axis__value">{{ yaw() | number: '1.0-0' }}°</span>
     </div>
     <mat-slider class="axis__slider" [min]="-180" [max]="180" [step]="1" [displayWith]="formatLabel" [disabled]="disabled()" discrete>
@@ -21,7 +21,7 @@
 
   <div class="axis">
     <div class="axis__label">
-      <span>Pitch <small>(eje X)</small></span>
+      <span>Pitch <small>(X axis)</small></span>
       <span class="axis__value">{{ pitch() | number: '1.0-0' }}°</span>
     </div>
     <mat-slider class="axis__slider" [min]="-85" [max]="85" [step]="1" [displayWith]="formatLabel" [disabled]="disabled()" discrete>
@@ -38,7 +38,7 @@
 
   <div class="axis">
     <div class="axis__label">
-      <span>Roll <small>(eje Z)</small></span>
+      <span>Roll <small>(Z axis)</small></span>
       <span class="axis__value">{{ roll() | number: '1.0-0' }}°</span>
     </div>
     <mat-slider class="axis__slider" [min]="-180" [max]="180" [step]="1" [displayWith]="formatLabel" [disabled]="disabled()" discrete>
@@ -55,11 +55,11 @@
 
   <div class="scene-controls__actions">
     <button mat-stroked-button type="button" (click)="reset()" [disabled]="disabled()">
-      Reiniciar pose
+      Reset pose
     </button>
   </div>
 
   @if (disabled()) {
-    <p class="scene-controls__hint">Esperando conexión WebSocket con Unity…</p>
+    <p class="scene-controls__hint">Waiting for the WebSocket connection to Unity…</p>
   }
 </section>

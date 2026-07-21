@@ -1,14 +1,21 @@
 :host {
+  /* The overlay window now covers the whole app, with its clipping region
+     carved down to the panel strips. The panels sit at the two edges and the
+     middle stays empty so the Unity scene shows through. */
   display: block;
   height: 100vh;
   background: transparent;
   color: #e6e6e6;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  pointer-events: none;
 }
 
 .unity-overlay {
   position: fixed;
   inset: 0;
+  /* Loading and error screens are full-window and interactive; the layout goes
+     'modal' at the same time, so the region is dropped to match. */
+  pointer-events: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -21,6 +28,20 @@
 }
 
 .unity-overlay p { margin: 0; }
+
+.placeholder {
+  margin: 0;
+  padding: 16px;
+  color: #8a8a8a;
+  font-size: 13px;
+}
+
+.side-panel__inspector {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
 
 .unity-overlay.loading .spinner {
   width: 48px;

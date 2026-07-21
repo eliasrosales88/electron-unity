@@ -3,12 +3,29 @@ export const IpcChannels = {
   UnityStatus: 'unity:status',
   UnityGetStatus: 'unity:get-status',
   UnityRestart: 'unity:restart',
-  OverlaySetBounds: 'overlay:set-bounds',
+  OverlaySetLayout: 'overlay:set-layout',
 } as const;
 
-export type OverlayBoundsRequest =
-  | { mode: 'modal' }
-  | { mode: 'dock-left'; width: number };
+export type PanelSide = 'left' | 'right';
+
+/**
+ * 'push'    — Unity is inset by the panel width, so the two never overlap.
+ * 'overlay' — the panel is drawn on top of the scene, which keeps its size.
+ */
+export type PanelMode = 'push' | 'overlay';
+
+export interface PanelLayout {
+  side: PanelSide;
+  mode: PanelMode;
+  /** Visible width in DIP. 0 means the panel claims no region at all. */
+  width: number;
+}
+
+export interface OverlayLayout {
+  /** Unity is not up yet: the whole window stays interactive for loading/error UI. */
+  modal: boolean;
+  panels: PanelLayout[];
+}
 
 export interface UnityBuildMetadata {
   executable: string;
@@ -35,6 +52,6 @@ export interface ElectronAPI {
     restart(): Promise<void>;
   };
   overlay: {
-    setBounds(req: OverlayBoundsRequest): void;
+    setLayout(layout: OverlayLayout): void;
   };
 }

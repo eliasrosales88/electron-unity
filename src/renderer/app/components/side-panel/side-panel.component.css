@@ -1,16 +1,32 @@
 :host {
   display: block;
   height: 100%;
+  /* The overlay window spans the whole app, so only the panel itself may take
+     the mouse — everything else must stay clickable through to Unity. */
+  pointer-events: auto;
 }
 
 .side-panel {
+  /* Anchored to the window edge rather than laid out in flow: the overlay
+     window spans the whole app and each panel owns one edge of it, which is
+     exactly what the clipping region carves out in the main process. */
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
   display: flex;
   flex-direction: column;
-  height: 100vh;
   background: #15191e;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   color: #e6e6e6;
   overflow: hidden;
+}
+
+.side-panel--right {
+  left: auto;
+  right: 0;
+  border-right: none;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .side-panel--collapsed {

@@ -17,6 +17,12 @@ export interface EmbedHandles {
   parentHwnd: bigint;
 }
 
+/** Strips (in DIP) reserved at the window edges by panels in 'push' mode. */
+export interface UnityInsets {
+  left: number;
+  right: number;
+}
+
 export async function attachUnityToWindow(
   parentHwnd: bigint,
   unityPid: number
@@ -42,16 +48,27 @@ export async function attachUnityToWindow(
 export function resizeUnityToWindow(
   window: BrowserWindow,
   unityHwnd: bigint,
-  leftInsetDip = 0
+  insetsDip: UnityInsets = { left: 0, right: 0 }
 ): void {
   if (!isStillWindow(unityHwnd)) return;
+  // A minimized window reports a zero-sized content area. Laying Unity out
+  // against that would shrink its HWND to 1x1, and since nothing re-runs this
+  // on restore, the scene would stay invisible for the rest of the session.
+  if (window.isMinimized()) return;
   const bounds = window.getContentBounds();
+  if (bounds.width <= 0 || bounds.height <= 0) return;
   const display = screen.getDisplayMatching(bounds);
   const sf = display.scaleFactor || 1;
-  // Reserve a strip on the left for the docked side panel (DIP -> physical px)
-  // so the Unity child HWND and the overlay never overlap.
-  const inset = Math.min(Math.max(0, Math.round(leftInsetDip)), Math.max(0, bounds.width - 1));
-  const insetPx = Math.round(inset * sf);
+  // Reserve strips at the edges for docked side panels (DIP -> physical px) so
+  // the Unity child HWND and those panels never overlap. Both insets together
+  // are capped so Unity always keeps at least 1 DIP of width.
+  const wanted = Math.max(0, Math.round(insetsDip.left)) + Math.max(0, Math.round(insetsDip.right));
+  const budget = Math.max(0, bounds.width - 1);
+  const scale = wanted > budget && wanted > 0 ? budget / wanted : 1;
+  const leftInset = Math.round(Math.max(0, insetsDip.left) * scale);
+  const rightInset = Math.round(Math.max(0, insetsDip.right) * scale);
+  const leftPx = Math.round(leftInset * sf);
+  const rightPx = Math.round(rightInset * sf);
 
   // SetWindowPos places a child relative to the parent's Win32 client area,
   // which on Windows *includes* the application menu bar — while Electron's
@@ -62,9 +79,9 @@ export function resizeUnityToWindow(
   const offsetX = contentPx.x - clientOrigin.x;
   const offsetY = contentPx.y - clientOrigin.y;
 
-  const x = offsetX + insetPx;
+  const x = offsetX + leftPx;
   const y = offsetY;
-  const width = Math.max(1, contentPx.width - insetPx);
+  const width = Math.max(1, contentPx.width - leftPx - rightPx);
   const height = Math.max(1, contentPx.height);
   moveUnityWindow(unityHwnd, x, y, width, height);
   focusUnity(unityHwnd);
