@@ -1,72 +1,36 @@
-import { Injectable, OnDestroy, effect, inject } from '@angular/core';
+import { Injectable, effect, inject, signal } from '@angular/core';
 import { UnityService } from './unity.service';
 
-const COMPACT_MARGIN = 12;
+export const PANEL_EXPANDED_WIDTH = 360;
+export const PANEL_COLLAPSED_WIDTH = 56;
 
+/**
+ * Keeps the transparent overlay window and the Unity child HWND laid out
+ * side-by-side. While Unity is loading or errored the overlay covers the whole
+ * window ('modal'); once ready it docks to the left edge with the panel width,
+ * and the main process shifts Unity right by the same amount so the two
+ * surfaces never overlap.
+ */
 @Injectable({ providedIn: 'root' })
-export class OverlayBoundsService implements OnDestroy {
+export class OverlayBoundsService {
   private readonly unity = inject(UnityService);
 
-  private element: HTMLElement | null = null;
-  private observer: ResizeObserver | null = null;
-  private rafPending = false;
+  private readonly _panelWidth = signal(PANEL_EXPANDED_WIDTH);
+  readonly panelWidth = this._panelWidth.asReadonly();
 
   constructor() {
     effect(() => {
-      const ready = this.unity.ready();
-      const error = this.unity.error();
-      const modal = !ready || !!error;
+      const modal = !this.unity.ready() || !!this.unity.error();
+      const width = this._panelWidth();
       if (modal) {
-        this.sendModal();
+        window.electronAPI?.overlay?.setBounds({ mode: 'modal' });
       } else {
-        this.scheduleCompact();
+        window.electronAPI?.overlay?.setBounds({ mode: 'dock-left', width });
       }
     });
   }
 
-  ngOnDestroy(): void {
-    this.unregisterInspector();
-  }
-
-  registerInspector(el: HTMLElement): void {
-    this.element = el;
-    this.observer?.disconnect();
-    this.observer = new ResizeObserver(() => this.scheduleCompact());
-    this.observer.observe(el);
-    this.scheduleCompact();
-  }
-
-  unregisterInspector(): void {
-    this.observer?.disconnect();
-    this.observer = null;
-    this.element = null;
-  }
-
-  private sendModal(): void {
-    window.electronAPI?.overlay?.setBounds({ mode: 'modal' });
-  }
-
-  private scheduleCompact(): void {
-    if (this.rafPending) return;
-    this.rafPending = true;
-    requestAnimationFrame(() => {
-      this.rafPending = false;
-      this.sendCompact();
-    });
-  }
-
-  private sendCompact(): void {
-    if (!this.element) return;
-    const rect = this.element.getBoundingClientRect();
-    const width = Math.ceil(rect.width);
-    const height = Math.ceil(rect.height);
-    if (width <= 0 || height <= 0) return;
-    window.electronAPI?.overlay?.setBounds({
-      mode: 'compact',
-      width,
-      height,
-      marginX: COMPACT_MARGIN,
-      marginY: COMPACT_MARGIN,
-    });
+  setPanelWidth(width: number): void {
+    this._panelWidth.set(Math.max(1, Math.round(width)));
   }
 }

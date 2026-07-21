@@ -1,0 +1,65 @@
+<section class="scene-controls">
+  <h2 class="scene-controls__title">Escena</h2>
+  <p class="scene-controls__subtitle">Rotación del panel</p>
+
+  <div class="axis">
+    <div class="axis__label">
+      <span>Yaw <small>(eje Y)</small></span>
+      <span class="axis__value">{{ yaw() | number: '1.0-0' }}°</span>
+    </div>
+    <mat-slider class="axis__slider" [min]="-180" [max]="180" [step]="1" [displayWith]="formatLabel" [disabled]="disabled()" discrete>
+      <input
+        matSliderThumb
+        #yawThumb="matSliderThumb"
+        [value]="yaw()"
+        (input)="onValueChange('yaw', yawThumb.value)"
+        (dragStart)="onDragStart()"
+        (dragEnd)="onDragEnd()"
+      />
+    </mat-slider>
+  </div>
+
+  <div class="axis">
+    <div class="axis__label">
+      <span>Pitch <small>(eje X)</small></span>
+      <span class="axis__value">{{ pitch() | number: '1.0-0' }}°</span>
+    </div>
+    <mat-slider class="axis__slider" [min]="-85" [max]="85" [step]="1" [displayWith]="formatLabel" [disabled]="disabled()" discrete>
+      <input
+        matSliderThumb
+        #pitchThumb="matSliderThumb"
+        [value]="pitch()"
+        (input)="onValueChange('pitch', pitchThumb.value)"
+        (dragStart)="onDragStart()"
+        (dragEnd)="onDragEnd()"
+      />
+    </mat-slider>
+  </div>
+
+  <div class="axis">
+    <div class="axis__label">
+      <span>Roll <small>(eje Z)</small></span>
+      <span class="axis__value">{{ roll() | number: '1.0-0' }}°</span>
+    </div>
+    <mat-slider class="axis__slider" [min]="-180" [max]="180" [step]="1" [displayWith]="formatLabel" [disabled]="disabled()" discrete>
+      <input
+        matSliderThumb
+        #rollThumb="matSliderThumb"
+        [value]="roll()"
+        (input)="onValueChange('roll', rollThumb.value)"
+        (dragStart)="onDragStart()"
+        (dragEnd)="onDragEnd()"
+      />
+    </mat-slider>
+  </div>
+
+  <div class="scene-controls__actions">
+    <button mat-stroked-button type="button" (click)="reset()" [disabled]="disabled()">
+      Reiniciar pose
+    </button>
+  </div>
+
+  @if (disabled()) {
+    <p class="scene-controls__hint">Esperando conexión WebSocket con Unity…</p>
+  }
+</section>

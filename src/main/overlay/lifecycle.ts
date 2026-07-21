@@ -97,11 +97,13 @@ function computeOverlayBounds(req: OverlayBoundsRequest, mainBounds: Rectangle):
     return { ...mainBounds };
   }
 
-  const marginX = req.marginX ?? 12;
-  const marginY = req.marginY ?? 12;
+  // dock-left: full-height strip on the left edge. Unity is shifted right by
+  // the same width (see UnityLifecycle.setLeftInset) so the two never overlap.
   const width = Math.min(Math.max(1, Math.round(req.width)), mainBounds.width);
-  const height = Math.min(Math.max(1, Math.round(req.height)), mainBounds.height);
-  const x = mainBounds.x + Math.max(0, mainBounds.width - width - marginX);
-  const y = mainBounds.y + Math.min(marginY, Math.max(0, mainBounds.height - height));
-  return { x, y, width, height };
+  return {
+    x: mainBounds.x,
+    y: mainBounds.y,
+    width,
+    height: mainBounds.height,
+  };
 }

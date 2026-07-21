@@ -46,9 +46,23 @@ export class UnityLifecycle {
   private shuttingDown = false;
   private resizeHandler: (() => void) | null = null;
   private resizeDebounce: NodeJS.Timeout | null = null;
+  private leftInsetDip = 0;
 
   attachWindow(window: BrowserWindow): void {
     this.window = window;
+  }
+
+  /**
+   * Reserves a strip on the left of the window (in DIPs) for the docked
+   * renderer panel. Unity's child HWND is laid out in the remaining space.
+   */
+  setLeftInset(dip: number): void {
+    const next = Math.max(0, Math.round(dip));
+    if (next === this.leftInsetDip) return;
+    this.leftInsetDip = next;
+    if (this.window && this.running) {
+      resizeUnityToWindow(this.window, this.running.unityHwnd, this.leftInsetDip);
+    }
   }
 
   getStatus(): UnityStatus {
@@ -127,7 +141,7 @@ export class UnityLifecycle {
     };
     this.pendingChild = null;
 
-    resizeUnityToWindow(this.window, unityHwnd);
+    resizeUnityToWindow(this.window, unityHwnd, this.leftInsetDip);
     this.installResizeListener();
     console.log(`[Unity] resize + listener installed, marking ready`);
 
@@ -147,7 +161,7 @@ export class UnityLifecycle {
       if (this.resizeDebounce) clearTimeout(this.resizeDebounce);
       this.resizeDebounce = setTimeout(() => {
         if (this.window && this.running) {
-          resizeUnityToWindow(this.window, this.running.unityHwnd);
+          resizeUnityToWindow(this.window, this.running.unityHwnd, this.leftInsetDip);
         }
       }, 16);
     };

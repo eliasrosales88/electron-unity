@@ -8,7 +8,7 @@ export const IpcChannels = {
 
 export type OverlayBoundsRequest =
   | { mode: 'modal' }
-  | { mode: 'compact'; width: number; height: number; marginX?: number; marginY?: number };
+  | { mode: 'dock-left'; width: number };
 
 export interface UnityBuildMetadata {
   executable: string;
