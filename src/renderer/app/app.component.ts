@@ -5,6 +5,7 @@ import { UnityService } from './core/unity.service';
 import { OverlayLayoutService } from './core/overlay-layout.service';
 import { SidePanelComponent } from './components/side-panel/side-panel.component';
 import { SceneControlsComponent } from './components/scene-controls/scene-controls.component';
+import { SessionPanelComponent } from './components/session-panel/session-panel.component';
 import { WsInspectorComponent } from './components/ws-inspector/ws-inspector.component';
 
 @Component({
@@ -14,6 +15,7 @@ import { WsInspectorComponent } from './components/ws-inspector/ws-inspector.com
     MatDividerModule,
     SidePanelComponent,
     SceneControlsComponent,
+    SessionPanelComponent,
     WsInspectorComponent,
   ],
   templateUrl: './app.component.html',

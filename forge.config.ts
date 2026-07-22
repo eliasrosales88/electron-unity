@@ -12,6 +12,13 @@ import { mainConfig } from './webpack.main.config';
 import { rendererConfig } from './webpack.renderer.config';
 import { preloadConfig } from './webpack.preload.config';
 
+// Two `electron-forge start` processes cannot share the dev server and logger
+// ports, which is what testing a presenter/viewer session needs. Overriding
+// these lets a second instance run alongside the first:
+//   ELECTRON_UNITY_ALLOW_MULTI=1 FORGE_PORT=3001 FORGE_LOGGER_PORT=9001 npm start
+const devPort = Number(process.env.FORGE_PORT) || 3000;
+const loggerPort = Number(process.env.FORGE_LOGGER_PORT) || 9000;
+
 const config: ForgeConfig = {
   packagerConfig: {
     asar: true,
@@ -32,6 +39,8 @@ const config: ForgeConfig = {
     new AutoUnpackNativesPlugin({}),
     new WebpackPlugin({
       mainConfig,
+      port: devPort,
+      loggerPort,
       devContentSecurityPolicy: "default-src 'self' 'unsafe-inline' data:; script-src 'self' 'unsafe-eval' 'unsafe-inline' data:; connect-src 'self' ws://127.0.0.1:* ws://localhost:* http://localhost:*",
       renderer: {
         config: rendererConfig,

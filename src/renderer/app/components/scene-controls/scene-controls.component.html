@@ -59,7 +59,9 @@
     </button>
   </div>
 
-  @if (disabled()) {
+  @if (readOnly()) {
+    <p class="scene-controls__hint">The presenter is driving this scene.</p>
+  } @else if (disabled()) {
     <p class="scene-controls__hint">Waiting for the WebSocket connection to Unity…</p>
   }
 </section>

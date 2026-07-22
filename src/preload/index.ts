@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IpcChannels, type ElectronAPI, type UnityStatus, type OverlayLayout } from '../shared/ipc-contract';
+import type { RemotePose, SessionState } from '../shared/session-contract';
 
 const api: ElectronAPI = {
   getAppVersion: () => ipcRenderer.invoke(IpcChannels.AppVersion),
@@ -15,6 +16,25 @@ const api: ElectronAPI = {
   overlay: {
     setLayout: (layout: OverlayLayout) => {
       ipcRenderer.send(IpcChannels.OverlaySetLayout, layout);
+    },
+  },
+  session: {
+    getState: () => ipcRenderer.invoke(IpcChannels.SessionGetState),
+    onState: (cb: (state: SessionState) => void) => {
+      const listener = (_event: unknown, state: SessionState) => cb(state);
+      ipcRenderer.on(IpcChannels.SessionState, listener);
+      return () => { ipcRenderer.removeListener(IpcChannels.SessionState, listener); };
+    },
+    onRemotePose: (cb: (pose: RemotePose) => void) => {
+      const listener = (_event: unknown, pose: RemotePose) => cb(pose);
+      ipcRenderer.on(IpcChannels.SessionRemotePose, listener);
+      return () => { ipcRenderer.removeListener(IpcChannels.SessionRemotePose, listener); };
+    },
+    create: (title: string) => ipcRenderer.invoke(IpcChannels.SessionCreate, title),
+    join: (code: string) => ipcRenderer.invoke(IpcChannels.SessionJoin, code),
+    leave: () => ipcRenderer.invoke(IpcChannels.SessionLeave),
+    publishPose: (yaw: number, pitch: number, roll: number) => {
+      ipcRenderer.send(IpcChannels.SessionPublishPose, yaw, pitch, roll);
     },
   },
 };

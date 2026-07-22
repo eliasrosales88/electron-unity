@@ -2,6 +2,8 @@ import { app, BrowserWindow } from 'electron';
 import { registerAppInfoHandlers } from './ipc/app-info';
 import { registerUnityHandlers } from './ipc/unity';
 import { registerOverlayHandlers } from './ipc/overlay';
+import { registerSessionHandlers } from './ipc/session';
+import { sessionManager } from './session/manager';
 import { unityLifecycle } from './unity/lifecycle';
 import { createOverlayWindow } from './overlay/window';
 import { linkOverlayToMain, OverlayLink } from './overlay/lifecycle';
@@ -15,9 +17,14 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
-const gotSingleInstanceLock = app.requestSingleInstanceLock();
-if (!gotSingleInstanceLock) {
-  app.quit();
+// Testing presenter/viewer sessions needs two apps side by side, which the
+// single-instance lock forbids. Opt out explicitly for that, never by default.
+const allowMultipleInstances = process.env.ELECTRON_UNITY_ALLOW_MULTI === '1';
+if (!allowMultipleInstances) {
+  const gotSingleInstanceLock = app.requestSingleInstanceLock();
+  if (!gotSingleInstanceLock) {
+    app.quit();
+  }
 }
 
 let mainWindow: BrowserWindow | null = null;
@@ -25,6 +32,7 @@ let overlayWindow: BrowserWindow | null = null;
 let overlayLink: OverlayLink | null = null;
 let unsubscribeUnityIpc: (() => void) | null = null;
 let unsubscribeOverlayIpc: (() => void) | null = null;
+let unsubscribeSessionIpc: (() => void) | null = null;
 
 const createWindow = (): void => {
   mainWindow = new BrowserWindow({
@@ -57,6 +65,7 @@ const createWindow = (): void => {
     overlayLink = linkOverlayToMain(mainWindow, overlayWindow);
     unsubscribeUnityIpc = registerUnityHandlers(overlayWindow);
     unsubscribeOverlayIpc = registerOverlayHandlers(overlayLink);
+    unsubscribeSessionIpc = registerSessionHandlers(overlayWindow);
 
     if (!app.isPackaged) {
       overlayWindow.webContents.openDevTools({ mode: 'detach' });
@@ -64,6 +73,12 @@ const createWindow = (): void => {
 
     unityLifecycle.start().catch((err) => {
       console.error('[main] Unity start failed:', err);
+    });
+
+    // Independent of Unity: an unconfigured or unreachable SignalR must leave
+    // the rest of the app working, so this never rejects into the boot path.
+    sessionManager.start().catch((err) => {
+      console.error('[main] SignalR session start failed:', err);
     });
   });
 
@@ -73,6 +88,8 @@ const createWindow = (): void => {
     unsubscribeUnityIpc = null;
     unsubscribeOverlayIpc?.();
     unsubscribeOverlayIpc = null;
+    unsubscribeSessionIpc?.();
+    unsubscribeSessionIpc = null;
     overlayLink?.dispose();
     overlayLink = null;
     overlayWindow = null;
@@ -108,6 +125,13 @@ app.on('before-quit', async (event) => {
   if (isShuttingDown) return;
   isShuttingDown = true;
   event.preventDefault();
+  // Tear the session down first so viewers get 'end' / presenters get 'bye'
+  // while the network stack is still up.
+  try {
+    await sessionManager.dispose();
+  } catch (err) {
+    console.error('[main] session shutdown error:', err);
+  }
   try {
     await unityLifecycle.shutdown();
   } catch (err) {

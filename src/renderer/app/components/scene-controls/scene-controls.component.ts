@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject
 import { DecimalPipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSliderModule } from '@angular/material/slider';
+import { SessionService } from '../../core/session.service';
 import { UnityService } from '../../core/unity.service';
 
 type Axis = 'yaw' | 'pitch' | 'roll';
@@ -21,11 +22,13 @@ const ECHO_SUPPRESS_MS = 300;
 })
 export class SceneControlsComponent implements OnDestroy {
   private readonly unity = inject(UnityService);
+  private readonly session = inject(SessionService);
 
   readonly yaw = signal(0);
   readonly pitch = signal(0);
   readonly roll = signal(0);
-  readonly disabled = computed(() => this.unity.wsState() !== 'open');
+  readonly readOnly = this.session.isViewing;
+  readonly disabled = computed(() => this.unity.wsState() !== 'open' || this.readOnly());
 
   private activeDrags = 0;
   private suppressEchoUntil = 0;

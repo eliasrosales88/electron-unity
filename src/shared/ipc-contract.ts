@@ -1,9 +1,18 @@
+import type { SessionApi } from './session-contract';
+
 export const IpcChannels = {
   AppVersion: 'app:version',
   UnityStatus: 'unity:status',
   UnityGetStatus: 'unity:get-status',
   UnityRestart: 'unity:restart',
   OverlaySetLayout: 'overlay:set-layout',
+  SessionState: 'session:state',
+  SessionGetState: 'session:get-state',
+  SessionCreate: 'session:create',
+  SessionJoin: 'session:join',
+  SessionLeave: 'session:leave',
+  SessionPublishPose: 'session:publish-pose',
+  SessionRemotePose: 'session:remote-pose',
 } as const;
 
 export type PanelSide = 'left' | 'right';
@@ -54,4 +63,5 @@ export interface ElectronAPI {
   overlay: {
     setLayout(layout: OverlayLayout): void;
   };
+  session: SessionApi;
 }
