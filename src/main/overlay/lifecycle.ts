@@ -11,7 +11,6 @@ export function linkOverlayToMain(main: BrowserWindow, overlay: BrowserWindow): 
   let disposed = false;
   let lastLayout: OverlayLayout = { modal: true, panels: [] };
   let firstShown = false;
-  let pendingFollow: NodeJS.Timeout | null = null;
 
   // Chromium can reset a window's region across resizes and DPI changes, so
   // this is re-applied on every bounds update rather than set once.
@@ -54,12 +53,14 @@ export function linkOverlayToMain(main: BrowserWindow, overlay: BrowserWindow): 
     }
   };
 
+  // During a native Windows title-bar drag the 'move' stream runs inside the OS
+  // modal move loop, which starves JS timers: the old trailing debounce here
+  // never fired until the drag ENDED, so the overlay lagged behind and snapped
+  // into place on release. Follow synchronously instead so the overlay tracks
+  // the window on every 'move' the OS delivers. The panel content still freezes
+  // mid-drag (same blocked browser thread) — only the position is kept glued.
   const followNow = () => {
-    if (pendingFollow) clearTimeout(pendingFollow);
-    pendingFollow = setTimeout(() => {
-      pendingFollow = null;
-      applyBounds();
-    }, 16);
+    applyBounds();
   };
 
   const onShow = () => {
@@ -96,7 +97,6 @@ export function linkOverlayToMain(main: BrowserWindow, overlay: BrowserWindow): 
     dispose() {
       if (disposed) return;
       disposed = true;
-      if (pendingFollow) clearTimeout(pendingFollow);
       main.off('move', followNow);
       main.off('resize', followNow);
       main.off('show', onShow);
