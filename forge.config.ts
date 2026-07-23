@@ -24,6 +24,11 @@ const config: ForgeConfig = {
     asar: true,
     extraResource: [
       './resources-staging/unity',
+      // signalr loads its Node transports (ws, eventsource, tough-cookie,
+      // fetch-cookie …) via a real runtime require that webpack can't bundle;
+      // shipping them as resources/node_modules lets Node resolve them from the
+      // packaged bundle. Staged by scripts/stage-vendor.mjs.
+      './resources-staging/node_modules',
       './node_modules/koffi',
       './node_modules/@koromix',
     ],

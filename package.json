@@ -7,9 +7,10 @@
   "private": true,
   "scripts": {
     "stage:unity": "node scripts/stage-unity.mjs",
+    "stage:vendor": "node scripts/stage-vendor.mjs",
     "prestart": "npm run stage:unity",
-    "prepackage": "npm run stage:unity",
-    "premake": "npm run stage:unity",
+    "prepackage": "npm run stage:unity && npm run stage:vendor",
+    "premake": "npm run stage:unity && npm run stage:vendor",
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
