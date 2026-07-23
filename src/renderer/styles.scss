@@ -1,0 +1,145 @@
+@use '@angular/material' as mat;
+@use './theme/theme-colors' as brand;
+// Panel component styles live here as global rules — @ngtools/webpack does not
+// inline component styleUrls in this build, so component-scoped CSS never
+// applies. See _panels.scss for the full explanation.
+@use './panels';
+
+// Custom M3 theme. Declared "light" per the brief (primary #000000), but the
+// app is a dark overlay drawn over a live Unity scene, so the neutral surface
+// roles are repainted dark below to land on the #3c3c3e panel the design calls
+// for. Density -1 tightens the controls for a compact 360px side panel.
+html {
+  @include mat.theme(
+    (
+      color: (
+        primary: brand.$mono-palette,
+        tertiary: brand.$mono-palette,
+        theme-type: light,
+      ),
+      typography: Roboto,
+      density: -1,
+    )
+  );
+}
+
+// Repaint the neutral (surface) roles dark so the panel reads as #3c3c3e with
+// light ink, while keeping primary black for the single filled CTA. :root wins
+// over the html-scoped tokens mat.theme() emits, so these take precedence.
+:root {
+  // Surfaces — the docked panel and its inner containers.
+  --mat-sys-background: #3c3c3e;
+  --mat-sys-surface: #3c3c3e;
+  --mat-sys-surface-dim: #343436;
+  --mat-sys-surface-bright: #48484a;
+  --mat-sys-surface-container-lowest: #2b2b2d;
+  --mat-sys-surface-container-low: #363638;
+  --mat-sys-surface-container: #333335;
+  --mat-sys-surface-container-high: #454547;
+  --mat-sys-surface-container-highest: #4f4f51;
+  --mat-sys-surface-variant: #45454a;
+
+  // Ink + hairlines.
+  --mat-sys-on-background: #ededed;
+  --mat-sys-on-surface: #ededed;
+  --mat-sys-on-surface-variant: #a9a9ab;
+  --mat-sys-outline: #6a6a6c;
+  --mat-sys-outline-variant: rgba(255, 255, 255, 0.1);
+
+  // Primary = black fill for the one CTA; on-primary = near-white label.
+  --mat-sys-primary: #000000;
+  --mat-sys-on-primary: #fafafa;
+  --mat-sys-primary-container: #1a1a1a;
+  --mat-sys-on-primary-container: #fafafa;
+  --mat-sys-inverse-primary: #c6c6c6;
+
+  // Secondary / tertiary = the light end of the ramp, used for accents.
+  --mat-sys-secondary: #fafafa;
+  --mat-sys-on-secondary: #1a1a1a;
+  --mat-sys-secondary-container: #4a4a4c;
+  --mat-sys-on-secondary-container: #ededed;
+  --mat-sys-tertiary: #fafafa;
+  --mat-sys-on-tertiary: #1a1a1a;
+  --mat-sys-tertiary-container: #4a4a4c;
+  --mat-sys-on-tertiary-container: #ededed;
+
+  // Error stays semantic, tuned lighter so it reads on the dark surface.
+  --mat-sys-error: #ffb4ab;
+  --mat-sys-on-error: #690005;
+  --mat-sys-error-container: #93000a;
+  --mat-sys-on-error-container: #ffdad6;
+}
+
+// Component token fixes the primary=black choice forces:
+// - text/outlined buttons would render a black label on the grey panel;
+// - the slider active track + thumb would be black-on-grey (invisible);
+// - the form-field focus ring uses primary (black) and would vanish.
+html {
+  @include mat.button-overrides(
+    (
+      // filled CTA ('Present') keeps black container + near-white label
+      filled-container-color: #000000,
+      filled-label-text-color: #fafafa,
+      // text + outlined variants → light ink so they stay legible on #3c3c3e
+      // (the outlined icon follows outlined-label-text-color).
+      text-label-text-color: #ededed,
+      outlined-label-text-color: #ededed,
+      outlined-outline-color: #6a6a6c,
+    )
+  );
+
+  @include mat.slider-overrides(
+    (
+      active-track-color: #fafafa,
+      inactive-track-color: #6a6a6c,
+      handle-color: #fafafa,
+      focus-handle-color: #fafafa,
+      hover-handle-color: #fafafa,
+      label-container-color: #fafafa,
+      label-label-text-color: #000000,
+    )
+  );
+
+  @include mat.form-field-overrides(
+    (
+      outlined-focus-outline-color: #fafafa,
+      outlined-focus-label-text-color: #fafafa,
+      outlined-caret-color: #fafafa,
+    )
+  );
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  // The overlay window is transparent outside the docked panel; only the panel
+  // itself paints a surface, so the root must stay see-through to Unity. This
+  // must win over the background mat.theme() paints on <html>.
+  background: transparent;
+  overflow: hidden;
+  color-scheme: dark;
+}
+
+// The M3 type tokens set the family to bare "Roboto" with no generic fallback,
+// so if the webfont is slow or missing, text drops to the UA serif. Pin a sans
+// stack on the document and reset UA heading sizes so nothing renders serif and
+// panel text stays consistent with the Material controls.
+body {
+  font-family: 'Roboto', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: var(--mat-sys-on-surface);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+dl,
+dd {
+  margin: 0;
+  font: inherit;
+}

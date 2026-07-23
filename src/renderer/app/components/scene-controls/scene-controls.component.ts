@@ -17,8 +17,8 @@ const ECHO_SUPPRESS_MS = 300;
   standalone: true,
   imports: [DecimalPipe, MatButtonModule, MatSliderModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Styles are global (src/renderer/_panels.scss) — see side-panel for why.
   templateUrl: './scene-controls.component.html',
-  styleUrls: ['./scene-controls.component.css'],
 })
 export class SceneControlsComponent implements OnDestroy {
   private readonly unity = inject(UnityService);

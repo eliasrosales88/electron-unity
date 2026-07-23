@@ -13,12 +13,26 @@
       <span class="state-label">{{ wsState() }}</span>
     </div>
     <div class="ws-inspector__actions">
-      <button type="button" (click)="togglePretty()" [title]="prettyPrint() ? 'Show raw JSON' : 'Pretty print JSON'">
-        {{ prettyPrint() ? 'raw' : 'pretty' }}
+      <button
+        mat-icon-button
+        type="button"
+        (click)="togglePretty()"
+        [attr.aria-pressed]="prettyPrint()"
+        [title]="prettyPrint() ? 'Show raw JSON' : 'Pretty print JSON'"
+      >
+        <mat-icon>{{ prettyPrint() ? 'data_object' : 'notes' }}</mat-icon>
       </button>
-      <button type="button" (click)="clear()" title="Clear buffer">clear</button>
-      <button type="button" (click)="toggleCollapsed()" [title]="collapsed() ? 'Expand' : 'Collapse'">
-        {{ collapsed() ? '▾' : '▴' }}
+      <button mat-icon-button type="button" (click)="clear()" title="Clear buffer" aria-label="Clear buffer">
+        <mat-icon>clear_all</mat-icon>
+      </button>
+      <button
+        mat-icon-button
+        type="button"
+        (click)="toggleCollapsed()"
+        [title]="collapsed() ? 'Expand' : 'Collapse'"
+        [attr.aria-expanded]="!collapsed()"
+      >
+        <mat-icon>{{ collapsed() ? 'expand_more' : 'expand_less' }}</mat-icon>
       </button>
     </div>
   </header>

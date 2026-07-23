@@ -18,16 +18,17 @@
       @case ('idle') {
         <p class="session__subtitle">Present this scene, or join someone else's.</p>
 
-        <label class="field">
-          <span class="field__label">Session name</span>
+        <mat-form-field class="field" appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Session name</mat-label>
           <input
-            class="field__input"
+            matInput
             type="text"
             [value]="title()"
             (input)="onTitleInput($any($event.target).value)"
             maxlength="40"
           />
-        </label>
+          <mat-hint align="end">{{ title().length }}/40</mat-hint>
+        </mat-form-field>
 
         <button
           mat-flat-button
@@ -69,14 +70,18 @@
 
         <h3 class="session__section">Join by code</h3>
         <div class="join">
-          <input
-            class="field__input join__code"
-            type="text"
-            placeholder="ABC123"
-            maxlength="6"
-            [value]="codeInput()"
-            (input)="onCodeInput($any($event.target).value)"
-          />
+          <mat-form-field class="join__field" appearance="outline" subscriptSizing="dynamic">
+            <mat-label>Code</mat-label>
+            <input
+              matInput
+              class="join__code"
+              type="text"
+              placeholder="ABC123"
+              maxlength="6"
+              [value]="codeInput()"
+              (input)="onCodeInput($any($event.target).value)"
+            />
+          </mat-form-field>
           <button mat-stroked-button type="button" [disabled]="joinDisabled()" (click)="join()">
             Join
           </button>

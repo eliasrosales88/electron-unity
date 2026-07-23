@@ -1,15 +1,17 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { SessionService } from '../../core/session.service';
 
 @Component({
   selector: 'app-session-panel',
   standalone: true,
-  imports: [MatButtonModule, MatDividerModule],
+  imports: [MatButtonModule, MatDividerModule, MatFormFieldModule, MatInputModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Styles are global (src/renderer/_panels.scss) — see side-panel for why.
   templateUrl: './session-panel.component.html',
-  styleUrls: ['./session-panel.component.css'],
 })
 export class SessionPanelComponent {
   readonly session = inject(SessionService);

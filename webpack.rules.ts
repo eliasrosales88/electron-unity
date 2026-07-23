@@ -15,4 +15,10 @@ export const rules: Required<ModuleOptions>['rules'] = [
       },
     },
   },
+  {
+    // Webfonts bundled via @fontsource/roboto and material-symbols so the
+    // custom M3 theme and icons work fully offline (no Google Fonts <link>).
+    test: /\.(woff2?|ttf|eot)$/,
+    type: 'asset/resource',
+  },
 ];

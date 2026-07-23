@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject
 import { NgClass } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatIconModule } from '@angular/material/icon';
 import type { PanelMode, PanelSide } from '../../../../shared/ipc-contract';
 import {
   OverlayLayoutService,
@@ -13,10 +14,11 @@ import { UnityService } from '../../core/unity.service';
 @Component({
   selector: 'app-side-panel',
   standalone: true,
-  imports: [NgClass, MatButtonModule, MatDividerModule],
+  imports: [NgClass, MatButtonModule, MatDividerModule, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Styles are global (src/renderer/_panels.scss): @ngtools/webpack does not
+  // inline component styleUrls in this build, so component-scoped CSS is unused.
   templateUrl: './side-panel.component.html',
-  styleUrls: ['./side-panel.component.css'],
 })
 export class SidePanelComponent implements OnDestroy {
   private readonly layout = inject(OverlayLayoutService);
@@ -33,9 +35,9 @@ export class SidePanelComponent implements OnDestroy {
 
   readonly width = computed(() => (this.collapsed() ? PANEL_COLLAPSED_WIDTH : PANEL_EXPANDED_WIDTH));
   /** Chevron points towards the edge the panel is docked to. */
-  readonly toggleGlyph = computed(() => {
+  readonly toggleIcon = computed(() => {
     const pointsLeft = this.side() === 'left' ? !this.collapsed() : this.collapsed();
-    return pointsLeft ? '‹' : '›';
+    return pointsLeft ? 'chevron_left' : 'chevron_right';
   });
 
   constructor() {

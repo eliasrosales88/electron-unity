@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
 import { ElectronService } from './core/electron.service';
 import { UnityService } from './core/unity.service';
@@ -12,14 +13,15 @@ import { WsInspectorComponent } from './components/ws-inspector/ws-inspector.com
   selector: 'app-root',
   standalone: true,
   imports: [
+    MatButtonModule,
     MatDividerModule,
     SidePanelComponent,
     SceneControlsComponent,
     SessionPanelComponent,
     WsInspectorComponent,
   ],
+  // Styles are global (src/renderer/_panels.scss) — see side-panel for why.
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
 })
 export class AppComponent implements OnInit {
   private readonly electron = inject(ElectronService);

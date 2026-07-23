@@ -13,7 +13,7 @@
     @if (unity.status().logPath) {
       <p class="log-path"><strong>Log:</strong> {{ unity.status().logPath }}</p>
     }
-    <button type="button" (click)="restartUnity()">Restart Unity</button>
+    <button mat-stroked-button type="button" (click)="restartUnity()">Restart Unity</button>
   </div>
 }
 

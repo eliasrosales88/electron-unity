@@ -1,0 +1,644 @@
+// Panel component styles, consolidated here as GLOBAL rules.
+//
+// Why global instead of per-component styleUrls: @ngtools/webpack in this
+// Electron Forge build does not inline component styleUrls into the compiled
+// bundle, so component-scoped CSS never reaches the DOM (the long-standing
+// "transparent panels / no padding" bug, and the documented ":host has no
+// effect" quirk). The global stylesheet IS injected (style-loader), so the
+// panel styling lives here. Selectors are BEM-unique, so no scoping is lost.
+//
+// Colours come from the M3 theme's --mat-sys-* tokens (see styles.scss).
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── App shell (app-root) ─────────────────────────────────────────────── */
+
+app-root {
+  /* The overlay window covers the whole app, with its clipping region carved
+     down to the panel strips. The panels sit at the two edges and the middle
+     stays empty so the Unity scene shows through. */
+  display: block;
+  height: 100vh;
+  background: transparent;
+  color: var(--mat-sys-on-surface);
+  pointer-events: none;
+}
+
+.unity-overlay {
+  position: fixed;
+  inset: 0;
+  /* Loading and error screens are full-window and interactive. */
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 10;
+  padding: 24px;
+  text-align: center;
+}
+
+.unity-overlay p { margin: 0; }
+
+.unity-overlay.loading .spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #fafafa;
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+.unity-overlay.loading .hint {
+  font-size: 13px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.unity-overlay.error {
+  background: rgba(40, 10, 10, 0.95);
+}
+
+.unity-overlay.error h2 { color: var(--mat-sys-error); margin: 0 0 8px; }
+.unity-overlay.error .msg { max-width: 70ch; }
+.unity-overlay.error .log-path { font-size: 12px; color: var(--mat-sys-on-surface-variant); word-break: break-all; }
+
+.unity-overlay button { margin-top: 8px; }
+
+/* ── Panel shell (app-side-panel) ─────────────────────────────────────── */
+
+app-side-panel {
+  display: block;
+  height: 100%;
+  /* Only the panel itself takes the mouse; everything else clicks through. */
+  pointer-events: auto;
+}
+
+.side-panel {
+  /* Anchored to the window edge; the clipping region carves this strip out. */
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  /* Solid panel surface (the user's #3c3c3e). */
+  background: #3c3c3e;
+  border-right: 1px solid var(--mat-sys-outline-variant);
+  color: var(--mat-sys-on-surface);
+  overflow: hidden;
+}
+
+.side-panel--right {
+  left: auto;
+  right: 0;
+  border-right: none;
+  border-left: 1px solid var(--mat-sys-outline-variant);
+}
+
+.side-panel--collapsed {
+  align-items: center;
+  padding-top: 8px;
+}
+
+.side-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 10px 16px 20px;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.side-panel__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.side-panel__brand h1 {
+  margin: 0;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--mat-sys-on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.side-panel__content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.side-panel__inspector {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mat-sys-outline);
+  flex-shrink: 0;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.dot.state-connecting {
+  background: #facc15;
+  box-shadow: 0 0 6px #facc15;
+  animation: pulse 1s linear infinite;
+}
+
+.dot.state-open {
+  background: #4ade80;
+  box-shadow: 0 0 6px #4ade80;
+}
+
+.dot.state-closed,
+.dot.state-error {
+  background: #f87171;
+  box-shadow: 0 0 6px #f87171;
+}
+
+/* ── Scene controls (app-scene-controls) ──────────────────────────────── */
+
+app-scene-controls { display: block; }
+
+.scene-controls {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+/* Section eyebrow — a small uppercase label, the tool-panel convention. */
+.scene-controls__title {
+  margin: 0;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.scene-controls__subtitle {
+  margin: 4px 0 18px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.axis {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.axis + .axis {
+  margin-top: 18px;
+}
+
+.axis__label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--mat-sys-on-surface);
+}
+
+.axis__label small {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+/* Live degree readout — the data "lights up" as a monospace instrument value. */
+.axis__value {
+  font-family: 'JetBrains Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mat-sys-on-surface);
+}
+
+.axis__slider { width: 100%; }
+
+.scene-controls__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 22px;
+}
+
+.scene-controls__hint {
+  margin: 14px 0 0;
+  font-family: inherit;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+/* ── Session panel (app-session-panel) ────────────────────────────────── */
+
+app-session-panel { display: block; }
+
+.session {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+}
+
+.session__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.session__title {
+  margin: 0;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.session__conn {
+  font-family: inherit;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.session__conn--ok { color: #4ade80; }
+
+.session__subtitle,
+.session__hint {
+  margin: 0;
+  font-family: inherit;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.session__hint code {
+  font-family: 'JetBrains Mono', ui-monospace, Consolas, monospace;
+  font-size: 11.5px;
+  color: var(--mat-sys-on-surface);
+}
+
+.session__section {
+  margin: 4px 0 0;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.session__error {
+  margin: 0;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--mat-sys-error);
+  word-break: break-word;
+}
+
+.field { width: 100%; }
+
+/* The single filled CTA is black on a dark panel by design — a hairline border
+   and a soft shadow keep it from dissolving into the #3c3c3e surface. */
+.session__cta {
+  align-self: stretch;
+  margin-top: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.join {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.join__field {
+  flex: 1;
+  min-width: 0;
+}
+
+.join__code {
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Session code — a monospace instrument readout. */
+.code {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px;
+  border: 1px dashed var(--mat-sys-outline);
+  border-radius: 8px;
+  background: var(--mat-sys-surface-container-low);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.code--static { cursor: default; }
+
+.code__value {
+  font-family: 'JetBrains Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: 0.24em;
+  font-variant-numeric: tabular-nums;
+  color: var(--mat-sys-on-surface);
+}
+
+.code__hint {
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.lobby {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lobby__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 8px;
+  background: var(--mat-sys-surface-container-low);
+}
+
+.lobby__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.lobby__name {
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--mat-sys-on-surface);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lobby__host {
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--mat-sys-on-surface-variant);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stats {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stats__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.stats__row dt { color: var(--mat-sys-on-surface-variant); }
+
+.stats__row dd {
+  margin: 0;
+  color: var(--mat-sys-on-surface);
+  font-variant-numeric: tabular-nums;
+}
+
+.stats__row--bad dd { color: var(--mat-sys-error); }
+
+/* ── WebSocket inspector (app-ws-inspector) ───────────────────────────── */
+
+app-ws-inspector {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+.ws-inspector {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  background: transparent;
+  color: var(--mat-sys-on-surface);
+  font-family: 'JetBrains Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+  font-size: 12px;
+}
+
+.ws-inspector__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px 10px 20px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.ws-inspector__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.ws-inspector__title .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--mat-sys-outline);
+  flex-shrink: 0;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.ws-inspector__title .dot.state-connecting {
+  background: #facc15;
+  box-shadow: 0 0 6px #facc15;
+  animation: pulse 1s linear infinite;
+}
+
+.ws-inspector__title .dot.state-open {
+  background: #4ade80;
+  box-shadow: 0 0 6px #4ade80;
+}
+
+.ws-inspector__title .dot.state-closed,
+.ws-inspector__title .dot.state-error {
+  background: #f87171;
+  box-shadow: 0 0 6px #f87171;
+}
+
+.ws-inspector__title .port {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 10px;
+}
+
+.ws-inspector__title .state-label {
+  color: var(--mat-sys-outline);
+  font-size: 10px;
+  font-weight: 400;
+  text-transform: lowercase;
+}
+
+.ws-inspector__title .badge {
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface);
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.ws-inspector__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+/* Compact the Material icon buttons to fit the dense debug header. */
+.ws-inspector__actions .mat-mdc-icon-button {
+  width: 34px;
+  height: 34px;
+  padding: 5px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.ws-inspector__actions .mat-mdc-icon-button mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.ws-inspector__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ws-inspector__body::-webkit-scrollbar { width: 8px; }
+
+.ws-inspector__body::-webkit-scrollbar-thumb {
+  background: var(--mat-sys-outline-variant);
+  border-radius: 4px;
+}
+
+.empty {
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+  margin: 16px 0;
+  font-style: italic;
+}
+
+.ws-msg {
+  background: var(--mat-sys-surface-container-low);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
+
+.ws-msg__meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 10px;
+  color: var(--mat-sys-on-surface-variant);
+  margin-bottom: 4px;
+}
+
+.ws-msg__id {
+  color: var(--mat-sys-on-surface);
+  font-weight: 600;
+}
+
+.ws-msg__time { color: var(--mat-sys-on-surface-variant); }
+
+.ws-msg__size {
+  margin-left: auto;
+  color: var(--mat-sys-outline);
+}
+
+.ws-msg__payload {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--mat-sys-on-surface);
+  font-size: 11.5px;
+  line-height: 1.4;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .dot.state-connecting,
+  .ws-inspector__title .dot.state-connecting {
+    animation: none;
+  }
+  .unity-overlay.loading .spinner {
+    animation-duration: 2.4s;
+  }
+}

@@ -1,0 +1,93 @@
+@use 'sass:map';
+
+// Custom M3 palette for the Unity overlay panels.
+//
+// The brief is a strict black/white monochrome, so instead of running the
+// `ng generate @angular/material:theme-color` schematic (unavailable — this is
+// an Electron Forge + webpack build, no Angular CLI) the tonal palettes are
+// authored by hand. Pure #000 / #fafafa seeds also degenerate to grey under
+// Material Color Utilities, so hand-control gives cleaner, predictable tones.
+//
+// Greyscale ramp: M3 tone == CIE L*, converted to the matching sRGB grey.
+
+$_grey: (
+  0: #000000,
+  10: #1c1c1c,
+  20: #303030,
+  25: #3b3b3b,
+  30: #474747,
+  35: #525252,
+  40: #5e5e5e,
+  50: #777777,
+  60: #8d8d8d,
+  70: #ababab,
+  80: #c6c6c6,
+  90: #e2e2e2,
+  95: #f1f1f1,
+  98: #f9f9f9,
+  99: #fcfcfc,
+  100: #ffffff,
+);
+
+// The neutral ramp needs the extra surface-container tones M3 references.
+$_neutral: (
+  0: #000000,
+  4: #0e0e0e,
+  6: #131313,
+  10: #1c1c1c,
+  12: #202020,
+  17: #2a2a2a,
+  20: #303030,
+  22: #353535,
+  24: #393939,
+  25: #3b3b3b,
+  30: #474747,
+  35: #525252,
+  40: #5e5e5e,
+  50: #777777,
+  60: #8d8d8d,
+  70: #ababab,
+  80: #c6c6c6,
+  87: #dadada,
+  90: #e2e2e2,
+  92: #e8e8e8,
+  94: #eeeeee,
+  95: #f1f1f1,
+  96: #f3f3f3,
+  98: #f9f9f9,
+  99: #fcfcfc,
+  100: #ffffff,
+);
+
+// Standard M3 error ramp — the only hue in the system, kept for real errors.
+$_error: (
+  0: #000000,
+  10: #410002,
+  20: #690005,
+  25: #7e0007,
+  30: #93000a,
+  35: #a80710,
+  40: #ba1a1a,
+  50: #de3730,
+  60: #ff5449,
+  70: #ff897d,
+  80: #ffb4ab,
+  90: #ffdad6,
+  95: #ffedea,
+  98: #fff8f7,
+  99: #fffbff,
+  100: #ffffff,
+);
+
+// Full palette map, same shape the theme-color schematic emits: tonal keys at
+// the top plus secondary / neutral / neutral-variant / error sub-palettes.
+// Monochrome, so primary, secondary and neutral-variant all reuse the grey ramp.
+$mono-palette: map.merge(
+  $_grey,
+  (
+    secondary: $_grey,
+    neutral: $_neutral,
+    neutral-variant: $_grey,
+    error: $_error,
+  )
+);
