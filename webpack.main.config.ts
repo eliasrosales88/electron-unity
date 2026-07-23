@@ -27,5 +27,9 @@ export const mainConfig: Configuration = {
   },
   externals: {
     koffi: 'commonjs koffi',
+    // @microsoft/signalr resolves its Node WebSocket/fetch backends at runtime;
+    // bundling it turns those into unresolvable requires.
+    '@microsoft/signalr': 'commonjs @microsoft/signalr',
+    ws: 'commonjs ws',
   },
 };

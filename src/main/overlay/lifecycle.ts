@@ -1,21 +1,42 @@
-import { BrowserWindow, Rectangle } from 'electron';
-import type { OverlayBoundsRequest } from '../../shared/ipc-contract';
+import { BrowserWindow, Rectangle, screen } from 'electron';
+import type { OverlayLayout } from '../../shared/ipc-contract';
+import { hwndFromBuffer, setWindowRegion, type RegionRect } from '../unity/win32';
 
 export interface OverlayLink {
   dispose(): void;
-  applyBoundsRequest(req: OverlayBoundsRequest): void;
+  applyLayout(layout: OverlayLayout): void;
 }
 
 export function linkOverlayToMain(main: BrowserWindow, overlay: BrowserWindow): OverlayLink {
   let disposed = false;
-  let lastRequest: OverlayBoundsRequest = { mode: 'modal' };
+  let lastLayout: OverlayLayout = { modal: true, panels: [] };
   let firstShown = false;
   let pendingFollow: NodeJS.Timeout | null = null;
 
+  // Chromium can reset a window's region across resizes and DPI changes, so
+  // this is re-applied on every bounds update rather than set once.
+  const applyRegion = (contentBounds: Rectangle) => {
+    const hwnd = hwndFromBuffer(overlay.getNativeWindowHandle());
+    const rects = computeRegionRects(lastLayout, contentBounds);
+    if (!setWindowRegion(hwnd, rects)) {
+      console.warn(
+        '[overlay] SetWindowRgn failed; the overlay stays rectangular and will ' +
+        'swallow clicks meant for the Unity scene'
+      );
+    }
+  };
+
   const applyBounds = () => {
     if (disposed || overlay.isDestroyed() || main.isDestroyed()) return;
-    const target = computeOverlayBounds(lastRequest, main.getContentBounds());
-    overlay.setBounds(target);
+    // While minimized the content bounds collapse to zero; writing that through
+    // would leave the overlay with an empty region and no surface at all.
+    if (main.isMinimized()) return;
+    const contentBounds = main.getContentBounds();
+    if (contentBounds.width <= 0 || contentBounds.height <= 0) return;
+    // The overlay always spans the whole content area; which parts of it are
+    // actually a window is decided by the clipping region below.
+    overlay.setBounds({ ...contentBounds });
+    applyRegion(contentBounds);
 
     if (!firstShown && main.isVisible()) {
       firstShown = true;
@@ -85,25 +106,38 @@ export function linkOverlayToMain(main: BrowserWindow, overlay: BrowserWindow): 
       main.off('closed', onClosed);
       if (!overlay.isDestroyed()) overlay.destroy();
     },
-    applyBoundsRequest(req: OverlayBoundsRequest) {
-      lastRequest = req;
+    applyLayout(layout: OverlayLayout) {
+      lastLayout = layout;
       applyBounds();
     },
   };
 }
 
-function computeOverlayBounds(req: OverlayBoundsRequest, mainBounds: Rectangle): Rectangle {
-  if (req.mode === 'modal') {
-    return { ...mainBounds };
+/**
+ * Physical-pixel rects, relative to the overlay's top-left, that should remain
+ * a real window. `null` means "no region" — the whole overlay stays a window,
+ * which is what the loading and error screens need.
+ */
+function computeRegionRects(layout: OverlayLayout, contentBounds: Rectangle): RegionRect[] | null {
+  if (layout.modal) return null;
+
+  const sf = screen.getDisplayMatching(contentBounds).scaleFactor || 1;
+  const heightPx = Math.round(contentBounds.height * sf);
+  const rects: RegionRect[] = [];
+
+  for (const panel of layout.panels) {
+    // A zero-width panel contributes no rect at all — clamping it up to 1px
+    // would leave a dead sliver of window along the edge.
+    const width = Math.min(Math.max(0, Math.round(panel.width)), contentBounds.width);
+    if (width <= 0) continue;
+    const widthPx = Math.round(width * sf);
+    rects.push({
+      x: panel.side === 'left' ? 0 : Math.round(contentBounds.width * sf) - widthPx,
+      y: 0,
+      width: widthPx,
+      height: heightPx,
+    });
   }
 
-  // dock-left: full-height strip on the left edge. Unity is shifted right by
-  // the same width (see UnityLifecycle.setLeftInset) so the two never overlap.
-  const width = Math.min(Math.max(1, Math.round(req.width)), mainBounds.width);
-  return {
-    x: mainBounds.x,
-    y: mainBounds.y,
-    width,
-    height: mainBounds.height,
-  };
+  return rects;
 }

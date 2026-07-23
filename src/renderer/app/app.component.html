@@ -13,10 +13,18 @@
     @if (unity.status().logPath) {
       <p class="log-path"><strong>Log:</strong> {{ unity.status().logPath }}</p>
     }
-    <button type="button" (click)="restartUnity()">Restart Unity</button>
+    <button mat-stroked-button type="button" (click)="restartUnity()">Restart Unity</button>
   </div>
 }
 
 @if (unity.ready()) {
-  <app-side-panel></app-side-panel>
+  <app-side-panel side="left" mode="overlay" heading="Scene control">
+    <app-scene-controls></app-scene-controls>
+    <mat-divider></mat-divider>
+    <app-ws-inspector class="side-panel__inspector"></app-ws-inspector>
+  </app-side-panel>
+
+  <app-side-panel side="right" mode="overlay" heading="Session">
+    <app-session-panel></app-session-panel>
+  </app-side-panel>
 }

@@ -1,0 +1,152 @@
+<section class="session">
+  <header class="session__head">
+    <h2 class="session__title">Session</h2>
+    <span class="session__conn" [class.session__conn--ok]="session.connection() === 'connected'">
+      {{ connectionLabel() }}
+    </span>
+  </header>
+
+  @if (session.connection() === 'unconfigured') {
+    <p class="session__hint">
+      SignalR is not configured. Add <code>SIGNALR_CONNECTION_STRING</code> to
+      <code>.env</code> and restart the app.
+    </p>
+  } @else {
+
+    @switch (session.role()) {
+
+      @case ('idle') {
+        <p class="session__subtitle">Present this scene, or join someone else's.</p>
+
+        <mat-form-field class="field" appearance="outline" subscriptSizing="dynamic">
+          <mat-label>Session name</mat-label>
+          <input
+            matInput
+            type="text"
+            [value]="title()"
+            (input)="onTitleInput($any($event.target).value)"
+            maxlength="40"
+          />
+          <mat-hint align="end">{{ title().length }}/40</mat-hint>
+        </mat-form-field>
+
+        <button
+          mat-flat-button
+          type="button"
+          class="session__cta"
+          [disabled]="busy() || !session.canAct()"
+          (click)="present()"
+        >
+          Present
+        </button>
+
+        <mat-divider></mat-divider>
+
+        <h3 class="session__section">Open sessions</h3>
+        @if (session.lobby().length === 0) {
+          <p class="session__hint">No sessions announced right now.</p>
+        } @else {
+          <ul class="lobby">
+            @for (entry of session.lobby(); track entry.code) {
+              <li class="lobby__item">
+                <div class="lobby__meta">
+                  <span class="lobby__name">{{ entry.title }}</span>
+                  <span class="lobby__host">{{ entry.host }} · {{ entry.code }}</span>
+                </div>
+                <button
+                  mat-stroked-button
+                  type="button"
+                  [disabled]="busy() || !session.canAct()"
+                  (click)="join(entry.code)"
+                >
+                  Join
+                </button>
+              </li>
+            }
+          </ul>
+        }
+
+        <mat-divider></mat-divider>
+
+        <h3 class="session__section">Join by code</h3>
+        <div class="join">
+          <mat-form-field class="join__field" appearance="outline" subscriptSizing="dynamic">
+            <mat-label>Code</mat-label>
+            <input
+              matInput
+              class="join__code"
+              type="text"
+              placeholder="ABC123"
+              maxlength="6"
+              [value]="codeInput()"
+              (input)="onCodeInput($any($event.target).value)"
+            />
+          </mat-form-field>
+          <button mat-stroked-button type="button" [disabled]="joinDisabled()" (click)="join()">
+            Join
+          </button>
+        </div>
+      }
+
+      @case ('presenting') {
+        <p class="session__subtitle">You are presenting. Share this code:</p>
+
+        <button type="button" class="code" (click)="copyCode()" title="Copy to clipboard">
+          <span class="code__value">{{ session.code() }}</span>
+          <span class="code__hint">{{ copied() ? 'Copied' : 'Click to copy' }}</span>
+        </button>
+
+        <dl class="stats">
+          <div class="stats__row">
+            <dt>Viewers</dt>
+            <dd>{{ session.viewerCount() }}</dd>
+          </div>
+          <div class="stats__row">
+            <dt>Messages sent</dt>
+            <dd>{{ session.counters().sent }}</dd>
+          </div>
+          @if (session.counters().failed > 0) {
+            <div class="stats__row stats__row--bad">
+              <dt>Failed</dt>
+              <dd>{{ session.counters().failed }}</dd>
+            </div>
+          }
+        </dl>
+
+        <button mat-stroked-button type="button" [disabled]="busy()" (click)="leave()">
+          End session
+        </button>
+      }
+
+      @case ('viewing') {
+        <p class="session__subtitle">
+          Controlled by {{ session.presenter() ?? 'the presenter' }}
+        </p>
+
+        <div class="code code--static">
+          <span class="code__value">{{ session.code() }}</span>
+          <span class="code__hint">Read-only</span>
+        </div>
+
+        <dl class="stats">
+          <div class="stats__row">
+            <dt>Pose rate</dt>
+            <dd>{{ session.poseRateHz() }} Hz</dd>
+          </div>
+          <div class="stats__row">
+            <dt>Messages received</dt>
+            <dd>{{ session.counters().received }}</dd>
+          </div>
+        </dl>
+
+        <button mat-stroked-button type="button" [disabled]="busy()" (click)="leave()">
+          Leave session
+        </button>
+      }
+    }
+  }
+
+  @if (session.error(); as error) {
+    <p class="session__error">{{ error }}</p>
+  }
+</section>

@@ -1,28 +1,39 @@
-<aside class="side-panel" [class.side-panel--collapsed]="collapsed()">
+<!-- Position and size are inline bindings on purpose: :host selectors do not
+     take effect in this build setup, so relying on the stylesheet to anchor the
+     panel to its edge silently left both panels stacked at x=0. -->
+<aside
+  class="side-panel"
+  [class.side-panel--collapsed]="collapsed()"
+  [class.side-panel--right]="side() === 'right'"
+  [style.position]="'fixed'"
+  [style.top.px]="0"
+  [style.bottom.px]="0"
+  [style.left]="side() === 'left' ? '0px' : 'auto'"
+  [style.right]="side() === 'right' ? '0px' : 'auto'"
+  [style.width.px]="width()"
+>
   @if (!collapsed()) {
     <header class="side-panel__header">
       <div class="side-panel__brand">
         <span class="dot" [ngClass]="'state-' + wsState()"></span>
-        <h1>Control de escena</h1>
+        <h1>{{ heading() }}</h1>
       </div>
       <button
         mat-icon-button
         type="button"
         class="side-panel__toggle"
         (click)="toggle()"
-        title="Plegar panel"
-        aria-label="Plegar panel"
+        title="Collapse panel"
+        aria-label="Collapse panel"
       >
-        <span class="glyph">&lsaquo;</span>
+        <mat-icon>{{ toggleIcon() }}</mat-icon>
       </button>
     </header>
 
     <mat-divider></mat-divider>
 
     <div class="side-panel__content">
-      <app-scene-controls></app-scene-controls>
-      <mat-divider></mat-divider>
-      <app-ws-inspector class="side-panel__inspector"></app-ws-inspector>
+      <ng-content></ng-content>
     </div>
   } @else {
     <button
@@ -30,10 +41,10 @@
       type="button"
       class="side-panel__toggle side-panel__toggle--expand"
       (click)="toggle()"
-      title="Desplegar panel"
-      aria-label="Desplegar panel"
+      title="Expand panel"
+      aria-label="Expand panel"
     >
-      <span class="glyph">&rsaquo;</span>
+      <mat-icon>{{ toggleIcon() }}</mat-icon>
     </button>
   }
 </aside>

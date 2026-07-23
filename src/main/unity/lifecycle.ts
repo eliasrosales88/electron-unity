@@ -1,4 +1,4 @@
-import { BrowserWindow, dialog } from 'electron';
+﻿import { BrowserWindow, dialog } from 'electron';
 import treeKill from 'tree-kill';
 import { allocateEphemeralPort } from './port';
 import {
@@ -7,6 +7,7 @@ import {
   hideUnity,
   showUnity,
   requestUnityClose,
+  type UnityInsets,
 } from './embed';
 import { awaitUnitySnapshot } from './handshake';
 import { spawnUnity } from './spawn';
@@ -15,7 +16,7 @@ import {
   UnityBuildMissingError,
   UnityProtocolMismatchError,
 } from './paths';
-import { hwndFromBuffer } from './win32';
+import { hwndFromBuffer, focusUnity, raiseUnityToTop } from './win32';
 import type { UnityBuildMetadata, UnityStatus } from '../../shared/ipc-contract';
 
 const HANDSHAKE_TIMEOUT_MS = 30_000;
@@ -45,23 +46,27 @@ export class UnityLifecycle {
   private listeners = new Set<StatusListener>();
   private shuttingDown = false;
   private resizeHandler: (() => void) | null = null;
+  private focusHandler: (() => void) | null = null;
   private resizeDebounce: NodeJS.Timeout | null = null;
-  private leftInsetDip = 0;
+  private insetsDip: UnityInsets = { left: 0, right: 0 };
 
   attachWindow(window: BrowserWindow): void {
     this.window = window;
   }
 
   /**
-   * Reserves a strip on the left of the window (in DIPs) for the docked
-   * renderer panel. Unity's child HWND is laid out in the remaining space.
+   * Reserves strips at the window edges (in DIPs) for panels in 'push' mode.
+   * Unity's child HWND is laid out in whatever space is left over.
    */
-  setLeftInset(dip: number): void {
-    const next = Math.max(0, Math.round(dip));
-    if (next === this.leftInsetDip) return;
-    this.leftInsetDip = next;
+  setInsets(insets: UnityInsets): void {
+    const next: UnityInsets = {
+      left: Math.max(0, Math.round(insets.left)),
+      right: Math.max(0, Math.round(insets.right)),
+    };
+    if (next.left === this.insetsDip.left && next.right === this.insetsDip.right) return;
+    this.insetsDip = next;
     if (this.window && this.running) {
-      resizeUnityToWindow(this.window, this.running.unityHwnd, this.leftInsetDip);
+      resizeUnityToWindow(this.window, this.running.unityHwnd, this.insetsDip);
     }
   }
 
@@ -141,7 +146,7 @@ export class UnityLifecycle {
     };
     this.pendingChild = null;
 
-    resizeUnityToWindow(this.window, unityHwnd, this.leftInsetDip);
+    resizeUnityToWindow(this.window, unityHwnd, this.insetsDip);
     this.installResizeListener();
     console.log(`[Unity] resize + listener installed, marking ready`);
 
@@ -152,7 +157,13 @@ export class UnityLifecycle {
       error: null,
     });
 
+    // Bring the app to the foreground, then hand keyboard focus back to the
+    // Unity child. The order matters: window.focus() steals the focus that
+    // resizeUnityToWindow just gave Unity, and an unfocused Unity player
+    // ignores mouse input entirely — the scene would stay dead until some
+    // later resize happened to call focusUnity() again.
     this.window.focus();
+    focusUnity(unityHwnd);
   }
 
   private installResizeListener(): void {
@@ -161,20 +172,47 @@ export class UnityLifecycle {
       if (this.resizeDebounce) clearTimeout(this.resizeDebounce);
       this.resizeDebounce = setTimeout(() => {
         if (this.window && this.running) {
-          resizeUnityToWindow(this.window, this.running.unityHwnd, this.leftInsetDip);
+          resizeUnityToWindow(this.window, this.running.unityHwnd, this.insetsDip);
         }
       }, 16);
     };
     this.resizeHandler = handler;
     this.window.on('resize', handler);
     this.window.on('move', handler);
+    // Restoring from minimized/hidden does not necessarily emit 'resize', so
+    // without these the Unity child would keep whatever geometry it had while
+    // the window was away.
+    this.window.on('restore', handler);
+    this.window.on('show', handler);
+
+    // Coming back from the background, Windows restores focus to whichever of
+    // our windows was last active — usually the overlay, since that is what the
+    // user clicks. Unity would then stay unfocused and keep ignoring the mouse
+    // while the panel still worked. Focus on the *main* window means the user
+    // is heading for the scene, so hand it straight to the Unity child. Focus
+    // on the overlay is left alone so the panel keeps the keyboard.
+    const onFocus = () => {
+      if (!this.running) return;
+      // Order matters: get Unity back on top of the Chromium sibling first, so
+      // the scene is actually hit-testable, then hand it the keyboard focus.
+      raiseUnityToTop(this.running.unityHwnd);
+      focusUnity(this.running.unityHwnd);
+    };
+    this.focusHandler = onFocus;
+    this.window.on('focus', onFocus);
   }
 
   private removeResizeListener(): void {
     if (this.window && this.resizeHandler) {
       this.window.off('resize', this.resizeHandler);
       this.window.off('move', this.resizeHandler);
+      this.window.off('restore', this.resizeHandler);
+      this.window.off('show', this.resizeHandler);
     }
+    if (this.window && this.focusHandler) {
+      this.window.off('focus', this.focusHandler);
+    }
+    this.focusHandler = null;
     this.resizeHandler = null;
     if (this.resizeDebounce) {
       clearTimeout(this.resizeDebounce);

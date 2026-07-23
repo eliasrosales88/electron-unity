@@ -18,6 +18,7 @@ const koffi: typeof import('koffi') = (() => {
 
 const user32 = koffi.load('user32.dll');
 const kernel32 = koffi.load('kernel32.dll');
+const gdi32 = koffi.load('gdi32.dll');
 
 koffi.alias('HWND', 'void *');
 const EnumProc = koffi.proto('int __stdcall EnumWindowsProc(void *hwnd, intptr_t lParam)');
@@ -39,6 +40,10 @@ const GetWindowThreadProcessId = user32.func('uint32 __stdcall GetWindowThreadPr
 const EnumChildWindows = user32.func('int __stdcall EnumChildWindows(void *hWndParent, EnumWindowsProc *lpEnumFunc, intptr_t lParam)');
 const EnumWindowsFn = user32.func('int __stdcall EnumWindows(EnumWindowsProc *lpEnumFunc, intptr_t lParam)');
 const ClientToScreen = user32.func('int __stdcall ClientToScreen(void *hWnd, _Inout_ POINT *lpPoint)');
+const SetWindowRgn = user32.func('int __stdcall SetWindowRgn(void *hWnd, void *hRgn, int bRedraw)');
+const CreateRectRgn = gdi32.func('void * __stdcall CreateRectRgn(int x1, int y1, int x2, int y2)');
+const CombineRgn = gdi32.func('int __stdcall CombineRgn(void *hrgnDst, void *hrgnSrc1, void *hrgnSrc2, int iMode)');
+const DeleteObject = gdi32.func('int __stdcall DeleteObject(void *ho)');
 
 const GWL_STYLE = -16;
 const WS_CHILD = 0x40000000 >>> 0;
@@ -55,6 +60,8 @@ const HWND_TOP = 0n;
 const SW_HIDE = 0;
 const SW_SHOW = 5;
 const WM_CLOSE = 0x0010;
+
+const RGN_OR = 2;
 
 const UNITY_CLASS_NAME = 'UnityWndClass';
 
@@ -159,12 +166,66 @@ export function getClientOriginScreen(hwnd: bigint): { x: number; y: number } {
   return { x: pt.x, y: pt.y };
 }
 
+export interface RegionRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * Clips a window to the union of `rects` — anything outside stops painting and
+ * stops receiving input, which falls through to whatever sits below. This is
+ * how the transparent overlay leaves a real hole over the embedded Unity child
+ * HWND: the hole is carved at the OS level, so Unity gets clicks and drags
+ * natively instead of us forwarding synthetic events.
+ *
+ * Coordinates are physical pixels relative to the window's top-left corner.
+ * Pass `null` to drop the region and restore the full rectangular window; pass
+ * an empty array for a window that is entirely click-through.
+ */
+export function setWindowRegion(hwnd: bigint, rects: RegionRect[] | null): boolean {
+  if (rects === null) {
+    return SetWindowRgn(hwnd as any, null, 1) !== 0;
+  }
+
+  const combined = CreateRectRgn(0, 0, 0, 0);
+  for (const r of rects) {
+    if (r.width <= 0 || r.height <= 0) continue;
+    const part = CreateRectRgn(r.x, r.y, r.x + r.width, r.y + r.height);
+    CombineRgn(combined, combined, part, RGN_OR);
+    DeleteObject(part);
+  }
+
+  // On success the system takes ownership of `combined` — deleting it here
+  // would leave the window pointing at a freed GDI object.
+  const ok = SetWindowRgn(hwnd as any, combined, 1) !== 0;
+  if (!ok) DeleteObject(combined);
+  return ok;
+}
+
 export function moveUnityWindow(unityHwnd: bigint, x: number, y: number, w: number, h: number): void {
   SetWindowPos(
     unityHwnd as any,
     HWND_TOP as any,
     Math.round(x), Math.round(y), Math.round(w), Math.round(h),
     SWP_NOACTIVATE,
+  );
+}
+
+/** Gives keyboard focus to the Unity child; returns the HWND that ended up focused. */
+/**
+ * Re-raises the Unity child above its Chromium sibling without moving it.
+ * Chromium puts its own Chrome_RenderWidgetHostHWND back on top when the app
+ * is reactivated after a spell in the background; that widget then hit-tests
+ * ahead of Unity and silently eats every click aimed at the scene.
+ */
+export function raiseUnityToTop(unityHwnd: bigint): void {
+  SetWindowPos(
+    unityHwnd as any,
+    HWND_TOP as any,
+    0, 0, 0, 0,
+    SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE,
   );
 }
 
